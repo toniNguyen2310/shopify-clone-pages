@@ -1,0 +1,24 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "3d8aa28bfee74e3963b54bfc3b62cbaa"
+name = "synergistic-strategy-app"
+handle = "synergistic-strategy-app-13"
+application_url = "https://period-moscow-minutes-brakes.trycloudflare.com"
+embedded = true
+
+[build]
+include_config_on_deploy = true
+automatically_update_urls_on_dev = true
+
+[webhooks]
+api_version = "2025-07"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "write_products"
+
+[auth]
+redirect_urls = ["https://period-moscow-minutes-brakes.trycloudflare.com/auth/callback", "https://period-moscow-minutes-brakes.trycloudflare.com/auth/shopify/callback", "https://period-moscow-minutes-brakes.trycloudflare.com/api/auth/callback"]
+
+[pos]
+embedded = false
