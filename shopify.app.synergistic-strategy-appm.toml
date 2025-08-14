@@ -3,7 +3,7 @@
 client_id = "3d8aa28bfee74e3963b54bfc3b62cbaa"
 name = "synergistic-strategy-app"
 handle = "synergistic-strategy-app-13"
-application_url = "https://period-moscow-minutes-brakes.trycloudflare.com"
+application_url = "https://freely-chapter-casinos-hospital.trycloudflare.com"
 embedded = true
 
 [build]
@@ -18,7 +18,7 @@ api_version = "2025-07"
 scopes = "write_products"
 
 [auth]
-redirect_urls = ["https://period-moscow-minutes-brakes.trycloudflare.com/auth/callback", "https://period-moscow-minutes-brakes.trycloudflare.com/auth/shopify/callback", "https://period-moscow-minutes-brakes.trycloudflare.com/api/auth/callback"]
+redirect_urls = ["https://freely-chapter-casinos-hospital.trycloudflare.com/auth/callback", "https://freely-chapter-casinos-hospital.trycloudflare.com/auth/shopify/callback", "https://freely-chapter-casinos-hospital.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false
