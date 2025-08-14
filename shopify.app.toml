@@ -3,7 +3,7 @@
 client_id = "a62656208c561028d2c0ca583592f815"
 name = "synergistic-strategy-app"
 handle = "synergistic-strategy-app-12"
-application_url = "http://remixs-shopify-mongo-demo.vercel.app"
+application_url = "https://remixs-shopify-mongo-demo.vercel.app"
 embedded = true
 
 [build]
@@ -26,7 +26,7 @@ api_version = "2025-07"
 scopes = "write_products"
   
 [auth]
-redirect_urls = ["http://remixs-shopify-mongo-demo.vercel.app/auth/callback", "http://remixs-shopify-mongo-demo.vercel.app/auth/shopify/callback", "http://remixs-shopify-mongo-demo.vercel.app/api/auth/callback"]
+redirect_urls = ["https://remixs-shopify-mongo-demo.vercel.app/auth/callback", "https://remixs-shopify-mongo-demo.vercel.app/auth/shopify/callback", "https://remixs-shopify-mongo-demo.vercel.app/api/auth/callback"]
 
 [pos]
 embedded = false
