@@ -3,7 +3,7 @@
 client_id = "aec4af87de80e641deade3f17ef9d052"
 name = "dba80-app"
 handle = "dba80-app-12"
-application_url = "https://debt-soonest-region-nr.trycloudflare.com"
+application_url = "https://remixs-shopify-mongo-demo.vercel.app/"
 embedded = true
 
 [build]
@@ -26,7 +26,11 @@ api_version = "2025-07"
 scopes = "read_products,write_products"
   
 [auth]
-redirect_urls = ["https://debt-soonest-region-nr.trycloudflare.com/auth/callback", "https://debt-soonest-region-nr.trycloudflare.com/auth/shopify/callback", "https://debt-soonest-region-nr.trycloudflare.com/api/auth/callback"]
+redirect_urls = [
+"https://remixs-shopify-mongo-demo.vercel.app/auth/callback", 
+"https://remixs-shopify-mongo-demo.vercel.app/auth/shopify/callback", 
+"https://remixs-shopify-mongo-demo.vercel.app/api/auth/callback"
+]
 
 [pos]
 embedded = false
