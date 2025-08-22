@@ -109,13 +109,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     if (action === 'delete') {
       const themeId = formData.get('themeId') as string;
       await ShopTheme.findByIdAndDelete(themeId);
-      return Response.json({ success: 'Theme deleted!' });
+
+      return new Response(
+        JSON.stringify({ success: "Theme deleted!" }),
+        { headers: { "Content-Type": "application/json" } }
+      );
     }
 
     return new Response(
-      JSON.stringify({ success: "Theme deleted!" }),
-      { headers: { "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Invalid action" }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
     );
+
   } catch (error: any) {
     console.error('Error:', error);
 
