@@ -59,12 +59,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     status: node.status,
     price: node.variants.edges[0]?.node.price || "N/A",
   }))
-  return {
-    currentShop: session.shop,
-    themes: JSON.parse(JSON.stringify(themes)),
-    session,
-    products
-  };
+
+  return new Response(
+    JSON.stringify({
+      currentShop: session.shop,
+      themes: JSON.parse(JSON.stringify(themes)),
+      session,
+      products,
+    }),
+    {
+      headers: { "Content-Type": "application/json" },
+    }
+  );
 
 
 };
@@ -94,7 +100,10 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         primaryColor: primaryColor.toUpperCase(),
       });
 
-      return Response.json({ success: 'Theme created!' });
+      return new Response(
+        JSON.stringify({ success: "Theme created!" }),
+        { headers: { "Content-Type": "application/json" } }
+      );
     }
 
     if (action === 'delete') {
@@ -104,23 +113,23 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     return new Response(
-      JSON.stringify({ error: 'Invalid action' }),
-      { status: 400, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: "Theme deleted!" }),
+      { headers: { "Content-Type": "application/json" } }
     );
   } catch (error: any) {
     console.error('Error:', error);
 
     if (error.code === 11000) {
       return new Response(
-        JSON.stringify({ error: 'Theme already exists for this shop' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: "Theme already exists for this shop" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     if (error.name === 'ValidationError') {
       return new Response(
-        JSON.stringify({ error: 'Invalid color format. Use #RRGGBB' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: "Invalid color format. Use #RRGGBB" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
