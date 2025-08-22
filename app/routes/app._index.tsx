@@ -1,385 +1,287 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useFetcher, useLoaderData } from "@remix-run/react";
+import { Form, useFetcher, useLoaderData, useNavigation } from "@remix-run/react";
 import {
   Page,
-  Layout,
+  IndexTable,
   Text,
   Card,
   Button,
   BlockStack,
-  Box,
   List,
-  Link,
   InlineStack,
+  TextField,
+  useIndexResourceState,
+  DataTable,
 } from "@shopify/polaris";
 import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
-import { db } from "../lib/db-helper.server";
+import { connectDb } from "app/db.server";
+import { ShopTheme } from "app/models/Theme";
+
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  // Authenticate giống hệt như trước
   const { admin, session } = await authenticate.admin(request);
-  if (session.accessToken) {
-    console.log("Offline session hợp lệ, shop:", session.shop);
-  } else {
-    console.log("Session offline không hợp lệ, cần login lại");
-  }
+  await connectDb();
 
+  // Lấy tất cả themes
+  const themes = await ShopTheme.find({}).lean();
 
-  try {
-    // API hoàn toàn giống Prisma
-    const products = await db.product.findMany(
-      { shop: session.shop },
-      {
-        limit: 20,
-        sort: { createdAt: -1 }
-      }
-    );
-
-    const orders = await db.order.findMany(
-      { shop: session.shop },
-      {
-        limit: 10,
-        sort: { createdAt: -1 }
-      }
-    );
-
-    // Vẫn có thể gọi Shopify API
-    const shopifyProducts = await admin.rest.resources.Product.all({
-      session,
-      limit: 10,
-    });
-
-    const productCount = await db.product.count({ shop: session.shop });
-
-    return {
-      session,
-      products,
-      orders,
-      productCount,
-      shopifyProducts: shopifyProducts.data,
-      shop: session.shop,
-    };
-
-  } catch (error) {
-    console.error('Loader error:', error);
-    throw new Response('Internal Server Error', { status: 500 });
-  }
-};
-
-export const action = async ({ request }: ActionFunctionArgs) => {
-  const { admin } = await authenticate.admin(request);
-  const color = ["Red", "Orange", "Yellow", "Green"][
-    Math.floor(Math.random() * 4)
-  ];
-  const response = await admin.graphql(
-    `#graphql
-      mutation populateProduct($product: ProductCreateInput!) {
-        productCreate(product: $product) {
-          product {
+  //get list product
+  const response = await admin.graphql(`
+    {
+      products(first: 10) {
+        edges {
+          node {
             id
             title
             handle
             status
-            variants(first: 10) {
+            variants(first: 5) {
               edges {
                 node {
                   id
                   price
-                  barcode
-                  createdAt
                 }
               }
             }
           }
         }
-      }`,
-    {
-      variables: {
-        product: {
-          title: `${color} Snowboard`,
-        },
-      },
-    },
-  );
-  const responseJson = await response.json();
-
-  const product = responseJson.data!.productCreate!.product!;
-  const variantId = product.variants.edges[0]!.node!.id!;
-
-  const variantResponse = await admin.graphql(
-    `#graphql
-    mutation shopifyRemixTemplateUpdateVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-        productVariants {
-          id
-          price
-          barcode
-          createdAt
-        }
       }
-    }`,
-    {
-      variables: {
-        productId: product.id,
-        variants: [{ id: variantId, price: "100.00" }],
-      },
-    },
-  );
+    }
+  `);
 
-  const variantResponseJson = await variantResponse.json();
-
+  const data = await response.json();
+  const products = data.data.products.edges.map(({ node }: any) => ({
+    id: node.id,
+    title: node.title,
+    handle: node.handle,
+    status: node.status,
+    price: node.variants.edges[0]?.node.price || "N/A",
+  }))
   return {
-    product: responseJson!.data!.productCreate!.product,
-    variant:
-      variantResponseJson!.data!.productVariantsBulkUpdate!.productVariants,
+    currentShop: session.shop,
+    themes: JSON.parse(JSON.stringify(themes)),
+    session,
+    products
   };
+
+
 };
 
-export default function Index() {
-  const fetcher = useFetcher<typeof action>();
-  const { session, products, orders, productCount, shopifyProducts, shop } = useLoaderData<typeof loader>();
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const { session } = await authenticate.admin(request);
+  await connectDb();
 
-  const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
-  const productId = fetcher.data?.product?.id.replace(
-    "gid://shopify/Product/",
-    "",
-  );
+  const formData = await request.formData();
+  const action = formData.get('_action');
 
-  useEffect(() => {
-    if (productId) {
-      shopify.toast.show("Product created");
+  try {
+    if (action === 'create') {
+      const themeName = formData.get('themeName') as string;
+      const primaryColor = formData.get('primaryColor') as string;
+
+      if (!themeName || !primaryColor) {
+        return new Response(
+          JSON.stringify({ error: 'Theme name and color are required' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      await ShopTheme.create({
+        shopDomain: session.shop,
+        themeName: themeName.trim(),
+        primaryColor: primaryColor.toUpperCase(),
+      });
+
+      return Response.json({ success: 'Theme created!' });
     }
-  }, [productId, shopify]);
-  const generateProduct = () => fetcher.submit({}, { method: "POST" });
+
+    if (action === 'delete') {
+      const themeId = formData.get('themeId') as string;
+      await ShopTheme.findByIdAndDelete(themeId);
+      return Response.json({ success: 'Theme deleted!' });
+    }
+
+    return new Response(
+      JSON.stringify({ error: 'Invalid action' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  } catch (error: any) {
+    console.error('Error:', error);
+
+    if (error.code === 11000) {
+      return new Response(
+        JSON.stringify({ error: 'Theme already exists for this shop' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (error.name === 'ValidationError') {
+      return new Response(
+        JSON.stringify({ error: 'Invalid color format. Use #RRGGBB' }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({ error: 'Something went wrong' }),
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+};
+
+
+export default function Index() {
+  const { currentShop, themes, session, products } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
+  const [themeName, setThemeName] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('');
+  const isLoading = navigation.state === 'submitting';
+
+  const rows = products.map((p: any) => [
+    p.title,
+    p.handle,
+    p.status,
+    p.price,
+  ]);
 
   useEffect(() => {
+    const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0");
+    setPrimaryColor(randomColor);
+    console.log('currentShop>> ', currentShop)
     console.log('session>> ', session)
-    console.log('shopifyProducts>> ', shopifyProducts)
-    console.log('shop>> ', shop)
-  }, [session, shopifyProducts, shop])
+    console.log('products>> ', products)
+  }, [])
+
   return (
     <Page>
       <TitleBar title="Remix app template">
-        <button variant="primary" onClick={generateProduct}>
-          Generate a product
+        <button variant="primary" >
+          Add new theme
         </button>
       </TitleBar>
-      <BlockStack gap="500">
-        <Layout>
-          <Layout.Section>
-            <Card>
-              <BlockStack gap="500">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Congrats on creating a new Shopify app 🎉
-                  </Text>
-                  <Text variant="bodyMd" as="p">
-                    This embedded app template uses{" "}
-                    <Link
-                      url="https://shopify.dev/docs/apps/tools/app-bridge"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    interface examples like an{" "}
-                    <Link url="/app/additional" removeUnderline>
-                      additional page in the app nav
-                    </Link>
-                    , as well as an{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      Admin GraphQL
-                    </Link>{" "}
-                    mutation demo, to provide a starting point for app
-                    development.
-                  </Text>
-                </BlockStack>
-                <BlockStack gap="200">
-                  <Text as="h3" variant="headingMd">
-                    Get started with products
-                  </Text>
-                  <Text as="p" variant="bodyMd">
-                    Generate a product with GraphQL and get the JSON output for
-                    that product. Learn more about the{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql/latest/mutations/productCreate"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      productCreate
-                    </Link>{" "}
-                    mutation in our API references.
-                  </Text>
-                </BlockStack>
-                <InlineStack gap="300">
-                  <Button loading={isLoading} onClick={generateProduct}>
-                    Generate a product
-                  </Button>
-                  {fetcher.data?.product && (
-                    <Button
-                      url={`shopify:admin/products/${productId}`}
-                      target="_blank"
-                      variant="plain"
-                    >
-                      View product
-                    </Button>
-                  )}
+
+      {/* 🆕 CREATE FORM */}
+      <Card>
+        <BlockStack gap="400">
+          <Text variant="headingMd" as="h2">Add New Theme</Text>
+
+          <Form method="post">
+            <input type="hidden" name="_action" value="create" />
+
+            <BlockStack gap="300">
+              <TextField
+                label="Theme Name"
+                name="themeName"
+                value={themeName}
+                onChange={setThemeName}
+                placeholder="e.g., Summer Theme"
+                autoComplete="off"
+              />
+
+              <div>
+                <Text variant="bodyMd" as="h1" >Primary Color</Text>
+                <InlineStack gap="200" align="center" blockAlign="center">
+                  <input
+                    type="color"
+                    name="primaryColor"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    style={{
+                      width: '50px',
+                      height: '40px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  />
+                  <Text variant="bodyMd" fontWeight="bold" as="span">{primaryColor}</Text>
                 </InlineStack>
-                {fetcher.data?.product && (
-                  <>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productCreate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.product, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productVariantsBulkUpdate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.variant, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                  </>
-                )}
-              </BlockStack>
-            </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneThird">
-            <BlockStack gap="500">
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    App template specs
-                  </Text>
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Framework
-                      </Text>
-                      <Link
-                        url="https://remix.run"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Remix
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Database
-                      </Text>
-                      <Link
-                        url="https://www.prisma.io/"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Prisma
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Interface
-                      </Text>
-                      <span>
-                        <Link
-                          url="https://polaris.shopify.com"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          Polaris
-                        </Link>
-                        {", "}
-                        <Link
-                          url="https://shopify.dev/docs/apps/tools/app-bridge"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          App Bridge
-                        </Link>
-                      </span>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        API
-                      </Text>
-                      <Link
-                        url="https://shopify.dev/docs/api/admin-graphql"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphQL API
-                      </Link>
-                    </InlineStack>
-                  </BlockStack>
-                </BlockStack>
-              </Card>
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Next steps
-                  </Text>
-                  <List>
-                    <List.Item>
-                      Build an{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/getting-started/build-app-example"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        {" "}
-                        example app
-                      </Link>{" "}
-                      to get started
-                    </List.Item>
-                    <List.Item>
-                      Explore Shopify’s API with{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/tools/graphiql-admin-api"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphiQL
-                      </Link>
-                    </List.Item>
-                  </List>
-                </BlockStack>
-              </Card>
+              </div>
+
+              <Button
+                submit
+                variant="primary"
+                loading={isLoading && navigation.formData?.get('_action') === 'create'}
+                disabled={!themeName.trim()}
+              >
+                Create Theme
+              </Button>
             </BlockStack>
-          </Layout.Section>
-        </Layout>
-      </BlockStack>
+          </Form>
+        </BlockStack>
+      </Card>
+
+      {/* 📋 THEMES LIST */}
+      <Card>
+        <BlockStack gap="400">
+          <Text variant="headingMd" as="h2">
+            All Themes ({themes.length})
+          </Text>
+
+          {themes.length > 0 ? (
+            <List type="bullet">
+              {themes.map((theme: any) => (
+                <List.Item key={theme._id}>
+                  <InlineStack gap="300" align="space-between">
+                    <InlineStack gap="200" align="center">
+                      {/* Color Preview */}
+                      <div
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          backgroundColor: theme.primaryColor,
+                          borderRadius: '6px',
+                          border: '2px solid #ddd'
+                        }}
+                      />
+
+                      <div>
+                        <Text variant="bodyMd" as="p" fontWeight="semibold">
+                          {theme.themeName}
+                        </Text>
+                        <Text variant="bodySm" as="p" tone="subdued">
+                          {theme.shopDomain} • {theme.primaryColor}
+                        </Text>
+                      </div>
+                    </InlineStack>
+
+                    {/* Delete Button */}
+                    <Form method="post">
+                      <input type="hidden" name="_action" value="delete" />
+                      <input type="hidden" name="themeId" value={theme._id} />
+                      <Button
+                        submit
+                        size="micro"
+                        variant="plain"
+                        tone="critical"
+                        loading={isLoading && navigation.formData?.get('themeId') === theme._id}
+                      >
+                        Delete
+                      </Button>
+                    </Form>
+                  </InlineStack>
+                </List.Item>
+              ))}
+            </List>
+          ) : (
+            <Text variant="bodyMd" tone="subdued" fontWeight="bold" as="h3">
+              No themes yet. Create your first theme above!
+            </Text>
+          )}
+        </BlockStack>
+      </Card>
+
+      {/* PRODUCTS LIST */}
+      <Card>
+        <DataTable
+          columnContentTypes={["text", "text", "text", "text"]}
+          headings={["Title", "Handle", "Status", "Price"]}
+          rows={rows}
+        />
+      </Card>
+
     </Page>
   );
 }

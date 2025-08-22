@@ -1,21 +1,22 @@
 import type { ActionFunctionArgs } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
-import { db } from "../lib/db-helper.server";
+import { authenticate, sessionStorageExport } from "../shopify.server";
 
+//SAI LOGIC -> cần update lại session sao với trên template remix app
 export const action = async ({ request }: ActionFunctionArgs) => {
-    const { payload, session, topic, shop } = await authenticate.webhook(request);
-    console.log(`Received ${topic} webhook for ${shop}`);
+    const { shop, topic } = await authenticate.webhook(request);
 
-    const current = payload.current as string[];
-    if (session) {
-        await db.session.update({
-            where: {
-                id: session.id
-            },
-            data: {
-                scope: current.toString(),
-            },
-        });
+    console.log(`🪝 Received ${topic} webhook for shop: ${shop}`);
+
+    // Xoá toàn bộ session cũ để ép shop re-auth với scope mới
+    const sessions = await sessionStorageExport.findSessionsByShop(shop);
+    if (sessions.length > 0) {
+        await sessionStorageExport.deleteSessions(
+            sessions.map((s) => s.id)
+        );
+        console.log(`🗑️ Deleted ${sessions.length} sessions for shop: ${shop}`);
+    } else {
+        console.log(`⚠️ No sessions found for shop: ${shop}`);
     }
+
     return new Response();
 };

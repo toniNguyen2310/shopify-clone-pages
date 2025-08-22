@@ -1,9 +1,9 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "a62656208c561028d2c0ca583592f815"
-name = "synergistic-strategy-app"
-handle = "synergistic-strategy-app-12"
-application_url = "https://remixs-shopify-mongo-demo.vercel.app"
+client_id = "aec4af87de80e641deade3f17ef9d052"
+name = "dba80-app"
+handle = "dba80-app-12"
+application_url = "https://debt-soonest-region-nr.trycloudflare.com"
 embedded = true
 
 [build]
@@ -11,7 +11,7 @@ include_config_on_deploy = true
 automatically_update_urls_on_dev = true
 
 [webhooks]
-api_version = "2025-07"
+api_version = "2025-07" 
 
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
@@ -23,10 +23,10 @@ api_version = "2025-07"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = "read_products,write_products"
   
 [auth]
-redirect_urls = ["https://remixs-shopify-mongo-demo.vercel.app/auth/callback", "https://remixs-shopify-mongo-demo.vercel.app/auth/shopify/callback", "https://remixs-shopify-mongo-demo.vercel.app/api/auth/callback"]
+redirect_urls = ["https://debt-soonest-region-nr.trycloudflare.com/auth/callback", "https://debt-soonest-region-nr.trycloudflare.com/auth/shopify/callback", "https://debt-soonest-region-nr.trycloudflare.com/api/auth/callback"]
 
 [pos]
 embedded = false
