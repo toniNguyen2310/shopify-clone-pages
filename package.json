@@ -1,5 +1,5 @@
 {
-  "name": "synergistic-strategy-app",
+  "name": "clone-pages-app",
   "private": true,
   "scripts": {
     "build": "remix vite:build",

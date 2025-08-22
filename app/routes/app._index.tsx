@@ -26,45 +26,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   // Lấy tất cả themes
   const themes = await ShopTheme.find({}).lean();
 
-  //get list product
-  const response = await admin.graphql(`
-    {
-      products(first: 10) {
-        edges {
-          node {
-            id
-            title
-            handle
-            status
-            variants(first: 5) {
-              edges {
-                node {
-                  id
-                  price
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `);
-
-  const data = await response.json();
-  const products = data.data.products.edges.map(({ node }: any) => ({
-    id: node.id,
-    title: node.title,
-    handle: node.handle,
-    status: node.status,
-    price: node.variants.edges[0]?.node.price || "N/A",
-  }))
-
   return new Response(
     JSON.stringify({
       currentShop: session.shop,
       themes: JSON.parse(JSON.stringify(themes)),
       session,
-      products,
     }),
     {
       headers: { "Content-Type": "application/json" },
@@ -146,32 +112,24 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 
 export default function Index() {
-  const { currentShop, themes, session, products } = useLoaderData<typeof loader>();
+  const { currentShop, themes, session } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const [toastContent, setToastContent] = useState<string | null>(null);
   const [themeName, setThemeName] = useState('');
   const [primaryColor, setPrimaryColor] = useState('');
   const isLoading = navigation.state === 'submitting';
 
-  const rows = products.map((p: any) => [
-    p.title,
-    p.handle,
-    p.status,
-    p.price,
-  ]);
-
   useEffect(() => {
     const randomColor = "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0");
     setPrimaryColor(randomColor);
     console.log('currentShop>> ', currentShop)
     console.log('session>> ', session)
-    console.log('products>> ', products)
   }, [])
 
   return (
     <>
       <Page>
-        <TitleBar title="Remix app template">
+        <TitleBar title="Clone Pages App">
           <button variant="primary" >
             Add new theme
           </button>
@@ -288,15 +246,6 @@ export default function Index() {
               </Text>
             )}
           </BlockStack>
-        </Card>
-
-        {/* PRODUCTS LIST */}
-        <Card>
-          <DataTable
-            columnContentTypes={["text", "text", "text", "text"]}
-            headings={["Title", "Handle", "Status", "Price"]}
-            rows={rows}
-          />
         </Card>
 
       </Page>

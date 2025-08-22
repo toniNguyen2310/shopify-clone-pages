@@ -1,9 +1,9 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "aec4af87de80e641deade3f17ef9d052"
-name = "dba80-app"
-handle = "dba80-app-12"
-application_url = "https://remixs-shopify-mongo-demo.vercel.app/"
+client_id = "779d507932bb39553636fa296430555b"
+name = "Clone Pages"
+handle = "clone-pages-12"
+application_url = "https://remixs-shopify-mongo-demo.vercel.app"
 embedded = true
 
 [build]
@@ -26,11 +26,7 @@ api_version = "2025-07"
 scopes = "read_products,write_products"
   
 [auth]
-redirect_urls = [
-"https://remixs-shopify-mongo-demo.vercel.app/auth/callback", 
-"https://remixs-shopify-mongo-demo.vercel.app/auth/shopify/callback", 
-"https://remixs-shopify-mongo-demo.vercel.app/api/auth/callback"
-]
+redirect_urls = ["https://remixs-shopify-mongo-demo.vercel.app/auth/callback", "https://remixs-shopify-mongo-demo.vercel.app/auth/shopify/callback", "https://remixs-shopify-mongo-demo.vercel.app/api/auth/callback"]
 
 [pos]
 embedded = false
