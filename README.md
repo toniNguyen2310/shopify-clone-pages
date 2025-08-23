@@ -40,16 +40,19 @@ The main goals of this project:
 ```bash
 git clone https://github.com/toniNguyen2310/shopify-clone-pages.git
 cd shopify-clone-pages
+```
 2️⃣ Install dependencies
 
-bash
+```bash
 Sao chép
 Chỉnh sửa
 npm install
+```
 3️⃣ Configure environment variables
 
 Tạo file .env ở thư mục gốc:
 
+```bash
 env
 Sao chép
 Chỉnh sửa
@@ -59,6 +62,8 @@ SHOPIFY_API_SECRET="your_api_secret"
 SCOPES="read_products,write_products"
 MONGODB_URI="your_mongo_connection_string"
 MONGODB_DB_NAME="shopify_clone_pages"
+```
+
 4️⃣ Run locally
 
 bash
@@ -99,5 +104,6 @@ Fork this repo, create a new branch, and submit a PR.
 📜 License
 
 MIT License © 2025 toniNguyen2310
+
 
 
