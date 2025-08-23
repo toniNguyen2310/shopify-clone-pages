@@ -44,8 +44,6 @@ cd shopify-clone-pages
 2️⃣ Install dependencies
 
 ```bash
-Sao chép
-Chỉnh sửa
 npm install
 ```
 3️⃣ Configure environment variables
@@ -54,8 +52,6 @@ Tạo file .env ở thư mục gốc:
 
 ```bash
 env
-Sao chép
-Chỉnh sửa
 SHOPIFY_APP_URL="https://your-app-url.vercel.app"
 SHOPIFY_API_KEY="your_api_key"
 SHOPIFY_API_SECRET="your_api_secret"
@@ -66,13 +62,14 @@ MONGODB_DB_NAME="shopify_clone_pages"
 
 4️⃣ Run locally
 
-bash
-Sao chép
-Chỉnh sửa
+```bash
 npm run dev
+```
+
 Truy cập ứng dụng tại: http://localhost:3000
 
-🚀 Deployment on Vercel
+
+# 🚀 Deployment on Vercel
 
 Push code lên GitHub.
 
@@ -84,7 +81,8 @@ Deploy → Vercel sẽ cung cấp cho bạn một live domain.
 
 Đăng ký URL này trong Shopify Partners Dashboard.
 
-📌 Roadmap
+
+# 📌 Roadmap
 
 Add Shopify Polaris UI components.
 
@@ -96,14 +94,15 @@ Add automated testing.
 
 Publish as a real Shopify App.
 
-🤝 Contributing
+# 🤝 Contributing
 
 Contributions are welcome 🙌.
 Fork this repo, create a new branch, and submit a PR.
 
-📜 License
+# 📜 License
 
 MIT License © 2025 toniNguyen2310
+
 
 
 
