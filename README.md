@@ -35,7 +35,7 @@ The main goals of this project:
 
 ⚙️ **Local Setup**
 
-1️⃣ **Clone the repository**
+1️⃣ Clone the repository
 
 ```bash
 git clone https://github.com/toniNguyen2310/shopify-clone-pages.git
@@ -99,4 +99,5 @@ Fork this repo, create a new branch, and submit a PR.
 📜 License
 
 MIT License © 2025 toniNguyen2310
+
 
