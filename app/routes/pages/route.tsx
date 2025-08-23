@@ -5,15 +5,12 @@ import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { NavMenu } from "@shopify/app-bridge-react";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 
-import { authenticate, registerWebhooks } from "../shopify.server";
+import { authenticate, registerWebhooks } from "../../shopify.server";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
-
-  console.log('🏠 App loader in APP:', session.shop);
-
 
   return { apiKey: process.env.SHOPIFY_API_KEY || "" };
 };
@@ -24,10 +21,11 @@ export default function App() {
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
       <NavMenu>
-        <Link to="/app" rel="home">
+        <Link to="/pages" rel="home">
           Clone Pages
         </Link>
-        <Link to="/app/additional">Products</Link>
+        <Link to="/pages/products">Products</Link>
+        <Link to="/pages/new">Add Pages</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

@@ -67,7 +67,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   return null
 };
 
-export default function AdditionalPage() {
+export default function ProductsPage() {
   const { products } = useLoaderData<typeof loader>();
 
   const rows = products.map((p: any) => [
@@ -78,31 +78,17 @@ export default function AdditionalPage() {
   ]);
   return (
     <Page>
-      <TitleBar title="Additional page" />
+      <TitleBar title="Products Demo" />
       <Card>
         <DataTable
           columnContentTypes={["text", "text", "text", "text"]}
           headings={["Title", "Handle", "Status", "Price"]}
           rows={rows}
+          hasZebraStripingOnData
         />
       </Card>
     </Page>
   );
 }
 
-function Code({ children }: { children: React.ReactNode }) {
-  return (
-    <Box
-      as="span"
-      padding="025"
-      paddingInlineStart="100"
-      paddingInlineEnd="100"
-      background="bg-surface-active"
-      borderWidth="025"
-      borderColor="border"
-      borderRadius="100"
-    >
-      <code>{children}</code>
-    </Box>
-  );
-}
+

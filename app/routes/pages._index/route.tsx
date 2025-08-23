@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, useLoaderData, useNavigation } from "@remix-run/react";
+import { Form, useActionData, useLoaderData, useNavigate, useNavigation } from "@remix-run/react";
 import {
   Page,
   Text,
@@ -10,11 +10,11 @@ import {
   List,
   InlineStack,
   TextField,
-  DataTable,
-  Toast
+  Toast,
+  Frame
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
-import { authenticate } from "../shopify.server";
+import { authenticate } from "../../shopify.server";
 import { connectDb } from "app/db.server";
 import { ShopTheme } from "app/models/Theme";
 
@@ -113,10 +113,12 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function Index() {
   const { currentShop, themes, session } = useLoaderData<typeof loader>();
+  const actionData = useActionData<{ success?: string; error?: string }>();
   const navigation = useNavigation();
-  const [toastContent, setToastContent] = useState<string | null>(null);
+  const navigate = useNavigate();
   const [themeName, setThemeName] = useState('');
   const [primaryColor, setPrimaryColor] = useState('');
+  const [toast, setToast] = useState<{ content: string; error?: boolean } | null>(null);
   const isLoading = navigation.state === 'submitting';
 
   useEffect(() => {
@@ -126,12 +128,21 @@ export default function Index() {
     console.log('session>> ', session)
   }, [])
 
+  useEffect(() => {
+    if (actionData?.success) {
+      setToast({ content: actionData.success });
+      setThemeName("");
+    } else if (actionData?.error) {
+      setToast({ content: actionData.error, error: true });
+    }
+  }, [actionData]);
+
   return (
-    <>
+    <Frame>
       <Page>
-        <TitleBar title="Clone Pages App">
-          <button variant="primary" >
-            Add new theme
+        <TitleBar title="Clone Pages">
+          <button variant="primary" onClick={() => navigate('/pages/new')} >
+            Add page
           </button>
         </TitleBar>
 
@@ -249,13 +260,13 @@ export default function Index() {
         </Card>
 
       </Page>
-      {toastContent && (
+      {toast && (
         <Toast
-          content={toastContent}
-          onDismiss={() => setToastContent(null)}
+          content={toast.content}
+          error={toast.error}
+          onDismiss={() => setToast(null)}
         />
-      )}</>
-
-
+      )}
+    </Frame>
   );
 }

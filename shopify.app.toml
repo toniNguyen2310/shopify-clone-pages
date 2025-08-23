@@ -3,7 +3,7 @@
 client_id = "779d507932bb39553636fa296430555b"
 name = "Clone Pages"
 handle = "clone-pages-12"
-application_url = "https://remixs-shopify-mongo-demo.vercel.app"
+application_url = "https://shopify-clone-pages.vercel.app"
 embedded = true
 
 [build]
@@ -26,7 +26,7 @@ api_version = "2025-07"
 scopes = "read_products,write_products"
   
 [auth]
-redirect_urls = ["https://remixs-shopify-mongo-demo.vercel.app/auth/callback", "https://remixs-shopify-mongo-demo.vercel.app/auth/shopify/callback", "https://remixs-shopify-mongo-demo.vercel.app/api/auth/callback"]
+redirect_urls = ["https://shopify-clone-pages.vercel.app/auth/callback", "https://shopify-clone-pages.vercel.app/auth/shopify/callback", "https://shopify-clone-pages.vercel.app/api/auth/callback"]
 
 [pos]
 embedded = false

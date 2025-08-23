@@ -10,18 +10,17 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Tạo session storage cho MongoDB (Atlas hoặc local)
 const sessionStorage = new MongoDBSessionStorage(
-    new URL(process.env.MONGODB_URI as string), // phải là URL object
+    new URL(process.env.MONGODB_URI as string),
     process.env.MONGODB_DB || "shopify_app",
 );
 
 
-// Cấu hình shopifyApp chính
+
 const shopify = shopifyApp({
     apiKey: process.env.SHOPIFY_API_KEY!,
     apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
-    apiVersion: ApiVersion.January25, // hoặc ApiVersion.Unstable nếu test
+    apiVersion: ApiVersion.January25,
     scopes: process.env.SCOPES?.split(","),
     appUrl: process.env.SHOPIFY_APP_URL || "",
     authPathPrefix: "/auth",
@@ -36,12 +35,18 @@ const shopify = shopifyApp({
         : {}),
     webhooks: {
         APP_UNINSTALLED: {
-            deliveryMethod: DeliveryMethod.Http, // 👈 dùng enum thay vì "http"
+            deliveryMethod: DeliveryMethod.Http,
             callbackUrl: "/webhooks/app/uninstalled",
         },
         APP_SCOPES_UPDATE: {
             deliveryMethod: DeliveryMethod.Http,
             callbackUrl: "/webhooks/app/scopes_update",
+        },
+    },
+    hooks: {
+        afterAuth: async ({ session }) => {
+            const webhookResponse = await shopify.registerWebhooks({ session });
+            console.log('webhookResponse>>> ', webhookResponse)
         },
     },
 });
