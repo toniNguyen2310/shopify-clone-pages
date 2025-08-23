@@ -69,7 +69,7 @@ npm run dev
 Truy cập ứng dụng tại: http://localhost:3000
 
 
-# 🚀 Deployment on Vercel
+## 🚀 Deployment on Vercel
 
 Push code lên GitHub.
 
@@ -82,7 +82,7 @@ Deploy → Vercel sẽ cung cấp cho bạn một live domain.
 Đăng ký URL này trong Shopify Partners Dashboard.
 
 
-# 📌 Roadmap
+## 📌 Roadmap
 
 Add Shopify Polaris UI components.
 
@@ -94,14 +94,15 @@ Add automated testing.
 
 Publish as a real Shopify App.
 
-# 🤝 Contributing
+## 🤝 Contributing
 
 Contributions are welcome 🙌.
 Fork this repo, create a new branch, and submit a PR.
 
-# 📜 License
+## 📜 License
 
 MIT License © 2025 toniNguyen2310
+
 
 
 
