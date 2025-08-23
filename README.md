@@ -31,13 +31,72 @@ The main goals of this project:
 
 ---
 
-## 📂 Project Structure
+# Shopify Clone Pages
+
+⚙️ **Local Setup**
+
+1️⃣ **Clone the repository**
 
 ```bash
-shopify-clone-pages/
-├── app/                # Remix routes, UI components
-├── prisma/             # (Not used, replaced by MongoDB)
-├── public/             # Static assets
-├── utils/              # Shopify API + DB helpers
-├── vercel.json         # Deployment config
-└── package.json
+git clone https://github.com/toniNguyen2310/shopify-clone-pages.git
+cd shopify-clone-pages
+2️⃣ Install dependencies
+
+bash
+Sao chép
+Chỉnh sửa
+npm install
+3️⃣ Configure environment variables
+
+Tạo file .env ở thư mục gốc:
+
+env
+Sao chép
+Chỉnh sửa
+SHOPIFY_APP_URL="https://your-app-url.vercel.app"
+SHOPIFY_API_KEY="your_api_key"
+SHOPIFY_API_SECRET="your_api_secret"
+SCOPES="read_products,write_products"
+MONGODB_URI="your_mongo_connection_string"
+MONGODB_DB_NAME="shopify_clone_pages"
+4️⃣ Run locally
+
+bash
+Sao chép
+Chỉnh sửa
+npm run dev
+Truy cập ứng dụng tại: http://localhost:3000
+
+🚀 Deployment on Vercel
+
+Push code lên GitHub.
+
+Import repository vào Vercel.
+
+Thêm tất cả biến môi trường trong Vercel project settings.
+
+Deploy → Vercel sẽ cung cấp cho bạn một live domain.
+
+Đăng ký URL này trong Shopify Partners Dashboard.
+
+📌 Roadmap
+
+Add Shopify Polaris UI components.
+
+Implement webhooks for real-time syncing.
+
+Full CRUD Pages (similar to Shopify Admin).
+
+Add automated testing.
+
+Publish as a real Shopify App.
+
+🤝 Contributing
+
+Contributions are welcome 🙌.
+Fork this repo, create a new branch, and submit a PR.
+
+📜 License
+
+MIT License © 2025 toniNguyen2310
+
