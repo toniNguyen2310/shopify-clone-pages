@@ -1,0 +1,136 @@
+/* RichEditor.scss */
+.rich-editor-wrap {
+    border: 2px solid #fdfdfd;
+    border-radius: 8px;
+}
+
+.rich-editor-wrap:hover {
+    border: 2px solid #156ada;
+}
+
+.rich-editor {
+    border: 1px solid #bebdbd;
+    border-radius: 8px;
+    background: #fdfdfd;
+    width: 100%;
+
+    .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 8px;
+        background-color: #f3f1f1;
+        padding: 5px;
+        border-radius: 8px;
+
+        button {
+            border: none;
+            background: #ecebeb;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+
+            &.active {
+                background: #006fdd;
+                color: #fff;
+            }
+        }
+
+        button:hover {
+            background-color: #d2d2d2;
+        }
+
+        .is-active {
+            background-color: #aeacac;
+        }
+    }
+
+    .editor-area {
+        min-height: 120px;
+        padding: 8px;
+        border: 1px solid #c4cdd5;
+        border-radius: 4px;
+    }
+}
+
+
+
+
+.input-editor {
+    min-height: 150px;
+    /* tùy chỉnh chiều cao */
+}
+
+.tiptap {
+    padding: 5px 10px;
+    // background-color: red;
+    outline: none;
+    /* loại bỏ outline khi focus */
+    border: none;
+
+    :first-child {
+        margin-top: 0;
+    }
+
+    /* List styles */
+    /* Lists */
+    ul,
+    ol {
+        padding-left: 1rem;
+        /* giữ padding trái */
+        margin: 1.25rem 1rem 1.25rem 0.4rem;
+    }
+
+    ul li p,
+    ol li p {
+        margin-top: 0.25em;
+        margin-bottom: 0.25em;
+    }
+
+    /* Headings */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        line-height: 1.1;
+        margin-top: 2.5rem;
+        margin-bottom: 1.5rem;
+        /* default margin-bottom */
+        word-wrap: break-word;
+        /* thay cho text-wrap: pretty */
+    }
+
+    /* Chỉnh margin riêng cho h1, h2 */
+    h1,
+    h2 {
+        margin-top: 3.5rem;
+    }
+
+    /* Font sizes */
+    h1 {
+        font-size: 36px;
+        /* ~2.25rem */
+    }
+
+    h2 {
+        font-size: 1.4rem;
+        /* ~22px */
+    }
+
+    h3 {
+        font-size: 1.2rem;
+        /* ~19px */
+    }
+
+    h4,
+    h5,
+    h6 {
+        font-size: 1.1rem;
+        /* ~17.5px */
+    }
+
+
+}

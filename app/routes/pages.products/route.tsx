@@ -3,12 +3,16 @@ import {
   Card,
   Page,
   DataTable,
+  Frame,
+  Layout,
+  Loading,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
 import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { connectDb } from "app/db.server";
 import { authenticate } from "app/shopify.server";
 import { useLoaderData } from "@remix-run/react";
+import { useNavigationSkeleton } from "app/lib/utils/useNavigationSkeleton";
 
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -69,25 +73,35 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
 export default function ProductsPage() {
   const { products } = useLoaderData<typeof loader>();
-
   const rows = products.map((p: any) => [
     p.title,
     p.handle,
     p.status,
     p.price,
   ]);
+  const skeleton = useNavigationSkeleton();
+  if (skeleton) return skeleton;
+
   return (
-    <Page>
-      <TitleBar title="Products Demo" />
-      <Card>
-        <DataTable
-          columnContentTypes={["text", "text", "text", "text"]}
-          headings={["Title", "Handle", "Status", "Price"]}
-          rows={rows}
-          hasZebraStripingOnData
-        />
-      </Card>
-    </Page>
+    <Frame>
+      <Page>
+        <TitleBar title="Products Demo" />
+        <Layout>
+          <Layout.Section>
+            <Card>
+              <DataTable
+                columnContentTypes={["text", "text", "text", "text"]}
+                headings={["Title", "Handle", "Status", "Price"]}
+                rows={rows}
+                hasZebraStripingOnData
+              />
+            </Card>
+          </Layout.Section>
+        </Layout>
+
+      </Page>
+    </Frame>
+
   );
 }
 

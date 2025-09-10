@@ -5,7 +5,7 @@ import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { NavMenu } from "@shopify/app-bridge-react";
 import polarisStyles from "@shopify/polaris/build/esm/styles.css?url";
 
-import { authenticate, registerWebhooks } from "../../shopify.server";
+import { authenticate } from "../../shopify.server";
 
 export const links = () => [{ rel: "stylesheet", href: polarisStyles }];
 
@@ -24,7 +24,8 @@ export default function App() {
         <Link to="/pages" rel="home">
           Clone Pages
         </Link>
-        <Link to="/pages/products">Products</Link>
+        <Link to="/pages/products">Products GA</Link>
+        <Link to="/pages/theme">Theme Mongo</Link>
         <Link to="/pages/new">Add Pages</Link>
       </NavMenu>
       <Outlet />

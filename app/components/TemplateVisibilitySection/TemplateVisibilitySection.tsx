@@ -1,28 +1,78 @@
 // components/TemplateVisibilitySection/index.tsx
 import {
     BlockStack,
+    Button,
     Card,
     ChoiceList,
     Icon,
     InlineStack,
     Link,
     Select,
-    Text
+    Text,
+    TextField
 } from "@shopify/polaris";
 import { CalendarTimeIcon, ViewIcon } from "@shopify/polaris-icons";
-import type { TemplateVisibilitySectionProps } from "./Types";
+import type { TemplateVisibilitySectionProps } from "./types";
 
 export default function TemplateVisibilitySection({
-    template,
-    visibility,
-    onChangeTemplate,
-    onChangeVisibility,
-    disabled
+    templateSuffix,
+    publishedAt,
+    onChangeTemplateSuffix,
+    onChangePublishedAt,
+    onChangeIsPublished,
+    disabled = false,
 }: TemplateVisibilitySectionProps) {
+    const isPublished = publishedAt !== null;
+    // const isLive = publishedAt && new Date(publishedAt) <= new Date();
     const templateOptions = [
-        { label: 'Default page', value: 'default' },
+        { label: 'Default', value: '' },
         { label: 'Contact', value: 'contact' },
     ];
+
+    // Format date for display
+    const formatPublishDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    // Visibility choices
+    const visibilityChoices = [
+        {
+            label: 'Visible',
+            value: 'visible',
+            helpText: isPublished ? `As of ${formatPublishDate(publishedAt)} ` : undefined
+        },
+        {
+            label: 'Hidden',
+            value: 'hidden',
+            helpText: ''
+        },
+    ];
+
+    // Handle visibility change
+    const handleVisibilityChange = (selected: string[]) => {
+        const value = selected[0];
+        if (value === 'visible') {
+            onChangeIsPublished(true)
+            onChangePublishedAt(new Date().toISOString());
+        } else {
+            // Set to null to hide
+            onChangePublishedAt(null);
+            onChangeIsPublished(false)
+        }
+    };
+
+    // Handle template change
+    const handleTemplateChange = (value: string) => {
+        onChangeTemplateSuffix(value || null);
+    };
+
 
     return (
         <BlockStack gap="500">
@@ -41,12 +91,9 @@ export default function TemplateVisibilitySection({
                         <ChoiceList
                             title="Visibility"
                             titleHidden
-                            choices={[
-                                { label: 'Visible', value: 'Visible' },
-                                { label: 'Hidden', value: 'Hidden' },
-                            ]}
-                            selected={visibility}
-                            onChange={onChangeVisibility}
+                            choices={visibilityChoices}
+                            selected={[isPublished ? 'visible' : 'hidden']}
+                            onChange={handleVisibilityChange}
                             disabled={disabled}
                         />
                     </BlockStack>
@@ -60,7 +107,7 @@ export default function TemplateVisibilitySection({
                         <Text variant="bodyMd" as="p">
                             Template
                         </Text>
-                        <Link target="_blank" removeUnderline>
+                        <Link target="_blank" removeUnderline >
                             <Icon source={ViewIcon} tone="base" />
                         </Link>
                     </InlineStack>
@@ -68,8 +115,8 @@ export default function TemplateVisibilitySection({
                         label="Template"
                         labelHidden
                         options={templateOptions}
-                        onChange={onChangeTemplate}
-                        value={template}
+                        onChange={handleTemplateChange}
+                        value={templateSuffix || ''}
                         disabled={disabled}
                     />
                 </BlockStack>
