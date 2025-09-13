@@ -3,13 +3,12 @@ import type { Editor } from '@tiptap/react'
 import { EditorContent, useEditor, useEditorState } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { TextStyleKit } from '@tiptap/extension-text-style'
-import { Button, Icon, TextField } from '@shopify/polaris'
+import { Icon } from '@shopify/polaris'
 import {
     CodeIcon
 } from '@shopify/polaris-icons';
 import { useEffect, useState } from 'react'
-import { cleanEditorHtml } from 'app/lib/utils/cleanEditorHtml'
-// const extensions = [TextStyleKit, StarterKit]
+import { cleanEditorHtml } from 'app/utils/helpers'
 const extensions = [TextStyleKit, StarterKit]
 
 export function MenuBar({ editor, setShowCode, isShowCode }: { editor: Editor, setShowCode: (value: boolean) => void, isShowCode: boolean }) {

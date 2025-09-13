@@ -23,7 +23,7 @@ const ShopThemeSchema = new Schema<IShopTheme>(
         primaryColor: {
             type: String,
             required: true,
-            match: /^#([0-9A-F]{6})$/i, // validate dạng #RRGGBB
+            match: /^#([0-9A-F]{6})$/i,
         },
     },
     { timestamps: true }

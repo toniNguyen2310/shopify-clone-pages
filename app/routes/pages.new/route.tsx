@@ -1,42 +1,14 @@
 import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { authenticate } from "app/shopify.server";
-import { connectDb } from "app/db.server";
-import { PageModel } from "app/models/Page";
-import { useFetcher, useNavigation, useSubmit } from "@remix-run/react";
-import { useCallback, useEffect } from "react";
+import { useFetcher } from "@remix-run/react";
+import { useCallback } from "react";
 import PageForm from "app/components/PageForm/PageForm";
-import { PageFormValues } from "app/lib/shopify/types/pages";
-import { Frame, Loading } from "@shopify/polaris";
-import { PageSkeleton } from "app/components/Skeletons/PageSkeleton";
-import { useNavigationSkeleton } from "app/lib/utils/useNavigationSkeleton";
-import { ShopifyPageId } from "app/lib/utils/useShopifyPageId ";
-
-const CREATE_PAGE_MUTATION = `
-    mutation pageCreate($page: PageCreateInput!) {
-    pageCreate(page: $page) {
-    page {
-      id
-      title
-      handle
-        metafields(first: 10) {
-              edges {
-                node {
-                  namespace
-                  key
-                  value
-                }
-              }
-            }
-    }
-    userErrors {
-      field
-      message
-    }
-  }
-}
-`
-
-
+import { Frame } from "@shopify/polaris";
+import { useNavigationSkeleton } from "app/hooks/useNavigationSkeleton";
+import { CREATE_PAGE_MUTATION } from "app/graphql";
+import { ShopifyPageId } from "app/utils/helpers";
+import { formatPageInputForCreate } from "app/utils/shopify.helpers";
+import { PageFormValues } from "app/types";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
     await authenticate.admin(request);
@@ -49,43 +21,16 @@ export async function action({ request }: ActionFunctionArgs) {
 
         const formData = await request.formData();
         const pageData = Object.fromEntries(formData) as unknown as PageFormValues;
-        console.log('pageData>> ', pageData)
-        const pageInput = {
-            title: pageData.title,
-            handle: pageData.handle,
-            body: pageData.body,
-            templateSuffix: pageData.templateSuffix || null,
-            isPublished: !!pageData.publishedAt,
-            publishDate: pageData.publishedAt ?? null,
-            metafields: [] as any[],
-        };
-        console.log('pageInput>> ', pageInput)
-        if (pageData.seoTitle) {
-            pageInput.metafields.push({
-                namespace: "global",
-                key: "title_tag",
-                value: pageData.seoTitle.toString().trim(),
-                type: "single_line_text_field",
-            });
-        }
-        if (pageData.seoDescription) {
-            pageInput.metafields.push({
-                namespace: "global",
-                key: "description_tag",
-                value: pageData.seoDescription.toString().trim(),
-                type: "multi_line_text_field",
-            });
-        }
-        console.log('pageInput>> ', pageInput)
+        const pageInput = formatPageInputForCreate(pageData)
+
         const response = await admin.graphql(CREATE_PAGE_MUTATION, {
             variables: { page: pageInput },
         });
 
         const result = await response.json();
-        console.log("✅ GraphQL response:", result);
         const pageId = result.data.pageCreate.page.id
-        console.log('pageId>> ', pageId);
         const extractedId = ShopifyPageId.extract(pageId);
+
         if (result.data?.pageCreate?.userErrors?.length > 0) {
             console.error("❌ User errors:", result.data.pageCreate.userErrors);
             return new Response(
@@ -93,7 +38,6 @@ export async function action({ request }: ActionFunctionArgs) {
                 { status: 400, headers: { "Content-Type": "application/json" } }
             );
         }
-        // return null
         return redirect(`/pages/${encodeURIComponent(extractedId as string)}`);
 
     } catch (error) {

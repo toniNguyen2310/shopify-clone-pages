@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { Form, useActionData, useLoaderData, useNavigate, useNavigation } from "@remix-run/react";
+import { Form, useActionData, useFetcher, useLoaderData, useNavigate, useNavigation } from "@remix-run/react";
 import {
     Page,
     Text,
@@ -12,18 +12,18 @@ import {
     TextField,
     Toast,
     Frame,
-    Loading,
     Layout
 } from "@shopify/polaris";
 import { authenticate } from "../../shopify.server";
 import { connectDb } from "app/db.server";
 import { ShopTheme } from "app/models/Theme";
-import { useNavigationSkeleton } from "app/lib/utils/useNavigationSkeleton";
+import { useNavigationSkeleton } from "app/hooks/useNavigationSkeleton";
 
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
     const { session } = await authenticate.admin(request);
     await connectDb();
+    console.log('LOADER> ')
 
     // Lấy tất cả themes
     const themes = await ShopTheme.find({}).lean();
@@ -48,6 +48,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
     const formData = await request.formData();
     const action = formData.get('_action');
+    console.log('data> ', action)
 
     try {
         if (action === 'create') {
@@ -76,12 +77,14 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         if (action === 'delete') {
             const themeId = formData.get('themeId') as string;
             await ShopTheme.findByIdAndDelete(themeId);
+            console.log('themeId> ', themeId)
 
             return new Response(
                 JSON.stringify({ success: "Theme deleted!" }),
                 { headers: { "Content-Type": "application/json" } }
             );
         }
+
 
         return new Response(
             JSON.stringify({ error: "Invalid action" }),
@@ -121,18 +124,63 @@ export default function ThemeCrud() {
     const [primaryColor, setPrimaryColor] = useState('#2364aa');
     const [toast, setToast] = useState<{ content: string; error?: boolean } | null>(null);
     const isLoading = navigation.state === 'submitting';
+    const [listTheme, setListTheme] = useState([])
+    const fetcher = useFetcher<typeof action>();
+    const handleCreateTheme = (e: React.FormEvent) => {
+        e.preventDefault();
+        const fd = new FormData();
+        fd.append("_action", "create");
+        fd.append("themeName", themeName);
+        fd.append("primaryColor", primaryColor);
+        fetcher.submit(fd, { method: "post" });
+        setThemeName('')
+    };
 
 
+    const handleDeleteTheme = (id: string) => {
+        const fd = new FormData();
+        fd.append("_action", "delete");
+        fd.append("themeId", id);
+        fetcher.submit(fd, { method: "post" });
+    };
+
+
+
+    // useEffect(() => {
+    //     if (actionData?.success) {
+    //         console.log('actionData?.success>> ', actionData)
+    //         setToast({ content: actionData.success });
+    //         setThemeName("");
+    //     } else if (actionData?.error) {
+    //         setToast({ content: actionData.error, error: true });
+    //     }
+    // }, [actionData]);
+
+    useEffect(() => {
+        console.log('LOADER', themes)
+        setListTheme(themes)
+    }, [themes])
 
 
     useEffect(() => {
-        if (actionData?.success) {
-            setToast({ content: actionData.success });
-            setThemeName("");
-        } else if (actionData?.error) {
-            setToast({ content: actionData.error, error: true });
+        if (fetcher.data && (fetcher.data as any).success) {
+            // phân biệt hành động dựa vào formData
+            const action = fetcher.formData?.get('_action') as string;
+            if (action === 'create') {
+                // Thêm theme mới vào listTheme nếu muốn (phải trả theme mới từ action)
+                setToast({ content: (fetcher.data as any).success });
+                setThemeName("");
+            }
+            if (action === 'delete') {
+                const deletedId = fetcher.formData?.get('themeId') as string;
+                if (deletedId) {
+                    setListTheme(prev => prev.filter((t: any) => t._id !== deletedId));
+                    setToast({ content: (fetcher.data as any).success });
+                }
+            }
         }
-    }, [actionData]);
+    }, [fetcher.data]);
+
     const skeleton = useNavigationSkeleton();
     if (skeleton) return skeleton;
     return (
@@ -145,8 +193,7 @@ export default function ThemeCrud() {
                             <BlockStack gap="400">
                                 <Text variant="headingMd" as="h2">Add New Theme</Text>
 
-                                <Form method="post">
-                                    <input type="hidden" name="_action" value="create" />
+                                <Form onSubmit={handleCreateTheme}>
 
                                     <BlockStack gap="300">
                                         <TextField
@@ -183,7 +230,7 @@ export default function ThemeCrud() {
                                         <Button
                                             submit
                                             variant="primary"
-                                            loading={isLoading && navigation.formData?.get('_action') === 'create'}
+                                            loading={fetcher.state === 'submitting'}
                                             disabled={!themeName.trim()}
                                         >
                                             Create Theme
@@ -202,7 +249,7 @@ export default function ThemeCrud() {
 
                                 {themes.length > 0 ? (
                                     <List type="bullet">
-                                        {themes.map((theme: any) => (
+                                        {listTheme && listTheme.map((theme: any) => (
                                             <List.Item key={theme._id}>
                                                 <InlineStack gap="300" align="space-between">
                                                     <InlineStack gap="200" align="center">
@@ -227,20 +274,16 @@ export default function ThemeCrud() {
                                                         </div>
                                                     </InlineStack>
 
-                                                    {/* Delete Button */}
-                                                    <Form method="post">
-                                                        <input type="hidden" name="_action" value="delete" />
-                                                        <input type="hidden" name="themeId" value={theme._id} />
-                                                        <Button
-                                                            submit
-                                                            size="micro"
-                                                            variant="plain"
-                                                            tone="critical"
-                                                            loading={isLoading && navigation.formData?.get('themeId') === theme._id}
-                                                        >
-                                                            Delete
-                                                        </Button>
-                                                    </Form>
+
+                                                    <Button
+                                                        size="micro"
+                                                        variant="plain"
+                                                        tone="critical"
+                                                        onClick={() => handleDeleteTheme(theme._id)}
+                                                        loading={fetcher.state === 'submitting'}
+                                                    >
+                                                        Delete
+                                                    </Button>
                                                 </InlineStack>
                                             </List.Item>
                                         ))}

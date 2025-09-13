@@ -2,57 +2,60 @@
 .rich-editor-wrap {
     border: 2px solid #fdfdfd;
     border-radius: 8px;
-}
 
-.rich-editor-wrap:hover {
-    border: 2px solid #156ada;
-}
-
-.rich-editor {
-    border: 1px solid #bebdbd;
-    border-radius: 8px;
-    background: #fdfdfd;
-    width: 100%;
-
-    .toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 8px;
-        background-color: #f3f1f1;
-        padding: 5px;
+    .rich-editor {
+        border: 1px solid #bebdbd;
         border-radius: 8px;
+        background: #fdfdfd;
+        width: 100%;
 
-        button {
-            border: none;
-            background: #ecebeb;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+            background-color: #f3f1f1;
+            padding: 5px;
+            border-radius: 8px;
 
-            &.active {
-                background: #006fdd;
-                color: #fff;
+            button {
+                border: none;
+                background: #f3f1f1;
+                padding: 4px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+
+                &.active {
+                    background: #006fdd;
+                    color: #fff;
+                }
+            }
+
+            button:hover {
+                background-color: #d2d2d2;
+            }
+
+            .is-active {
+                background-color: #aeacac;
             }
         }
 
-        button:hover {
-            background-color: #d2d2d2;
-        }
-
-        .is-active {
-            background-color: #aeacac;
-        }
-    }
-
-    .editor-area {
-        min-height: 120px;
-        padding: 8px;
-        border: 1px solid #c4cdd5;
-        border-radius: 4px;
     }
 }
+
+// .tiptap.ProseMirror-focused {
+//     background-color: red;
+// }
+.rich-editor-wrap:has(.tiptap.ProseMirror-focused) {
+    border: 2px solid #156ada;
+}
+
+// .rich-editor-wrap:hover {
+//     border: 2px solid #156ada;
+// }
+
+
 
 
 

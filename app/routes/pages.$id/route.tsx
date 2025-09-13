@@ -1,92 +1,32 @@
-import { ActionFunctionArgs, LinksFunction, LoaderFunctionArgs, redirect } from "@remix-run/node";
+import { ActionFunctionArgs, LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { authenticate } from "app/shopify.server";
-import { useLoaderData, useNavigation, useSubmit, useFetcher, Navigate, useNavigate } from "@remix-run/react";
+import { useLoaderData, useFetcher } from "@remix-run/react";
 import PageForm from "app/components/PageForm/PageForm";
-import { PageFormValues } from "app/lib/shopify/types/pages";
-import { formatMetafieldsForUpdate, formatPageDataForGraphQL } from "app/lib/utils/pageUtils";
-import { useCallback, useEffect, useState } from "react";
-import { ShopifyPageId } from "app/lib/utils/useShopifyPageId ";
+import { useCallback } from "react";
 import { Frame, } from "@shopify/polaris";
-import { useNavigationSkeleton } from "app/lib/utils/useNavigationSkeleton";
-import { DELETE_PAGE_MUTATION, generateHandle } from "app/lib/shopify/graphql";
-
-const DUPLICATE_PAGE_MUTATION = `
- mutation pageCreate($page: PageCreateInput!) {
-    pageCreate(page: $page) {
-    page {
-      id
-      title
-      handle
-    }
-    userErrors {
-      field
-      message
-    }
-  }
-}
-`;
-
-const updatePageMutation = `
-            mutation UpdatePage($id: ID!, $page: PageUpdateInput!) {
-                pageUpdate(id: $id, page: $page) {
-                    page {
-                        id
-                        title
-                        body
-                        handle
-                        isPublished
-                        publishedAt
-                        templateSuffix
-                    }
-                    userErrors {
-                        code
-                        field
-                        message
-                    }
-                }
-            }
-        `;
-
+import { CREATE_PAGE_MUTATION, DELETE_PAGE_MUTATION, GET_PAGE_QUERY, SET_METAFIELDS_MUTATION, UPDATE_PAGE_MUTION } from "app/graphql";
+import { useNavigationSkeleton } from "app/hooks/useNavigationSkeleton";
+import { generateHandle, ShopifyPageId } from "app/utils/helpers";
+import { buildSeoMetafields, formatPageDataForUpdate, formatPageInputForCreate } from "app/utils/shopify.helpers";
+import { PageFormValues } from "app/types";
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
     console.log('=== EDIT PAGE LOADER CALLED ===');
     try {
         const { admin, session } = await authenticate.admin(request);
-
         const paramId = decodeURIComponent(params.id!);
         const id = ShopifyPageId.build(paramId as string)
 
-        console.log("[Loader] Page ID:", id);
-        const response = await admin.graphql(
-            `
-                    query getPage($id: ID!) {
-                    page(id: $id) {
-                        id  
-                        title
-                        body
-                        handle
-                        isPublished
-                        publishedAt
-                        templateSuffix
-                        seoTitle: metafield(namespace: "global", key: "title_tag") {
-                        value
-                        }
-                        seoDescription: metafield(namespace: "global", key: "description_tag") {
-                        value
-                        }              
-                    }
-                    }
-     `,
-            { variables: { id } });
-
+        const response = await admin.graphql(GET_PAGE_QUERY, { variables: { id } });
         const data = await response.json();
         const page = data?.data?.page;
-        console.log('page>>> ', page)
+
         const formattedPage = {
             ...page,
             seoTitle: page.seoTitle?.value ?? "",
             seoDescription: page.seoDescription?.value ?? "",
         };
+
         return new Response(
             JSON.stringify({
                 page: formattedPage,
@@ -107,83 +47,43 @@ export async function action({ params, request }: ActionFunctionArgs) {
     const { admin } = await authenticate.admin(request);
     const paramId = decodeURIComponent(params.id!);
     const id = ShopifyPageId.build(paramId as string)
+
     const formData = await request.formData();
     const data = Object.fromEntries(formData) as any;
+
     try {
         if (data._action === "delete") {
-            console.log('=== DELETE PAGE ACTION ===');
-            // Delete page
-            const res = await admin.graphql(DELETE_PAGE_MUTATION, { variables: { id } });
-            const result = await res.json();
+            console.log('✅ DELETE PAGE ACTION ✅ ');
+            const response = await admin.graphql(DELETE_PAGE_MUTATION, { variables: { id } });
+            const result = await response.json();
             if (result.data.pageDelete.userErrors?.length) {
                 return { success: false, errors: result.data.pageDelete.userErrors };
             }
             return redirect(`/pages`);
         } else if (data._action === "duplicate") {
-            console.log("=== DUPLICATE PAGE ACTION ===");
-
-
-            // Lấy thông tin page từ FormData (hoặc bạn có thể thêm hidden input chứa full page JSON nếu cần)
+            console.log("✅ DUPLICATE PAGE ACTION ✅");
             const originalPage = JSON.parse(data._pageJson);
+            const pageInput = formatPageInputForCreate(originalPage)
+            console.log('pageInput', pageInput);
 
-            const newPageInput = {
-                title: originalPage.title,
-                handle: originalPage.handle,
-                body: originalPage.body,
-                templateSuffix: originalPage.templateSuffix || null,
-                isPublished: !!originalPage.publishedAt,
-                publishDate: originalPage.publishedAt ?? null,
-                metafields: [] as any[],
-            };
-            if (originalPage.seoTitle) {
-                newPageInput.metafields.push({
-                    namespace: "global",
-                    key: "title_tag",
-                    value: originalPage.seoTitle.toString().trim(),
-                    type: "single_line_text_field",
-                });
-            }
-            if (originalPage.seoDescription) {
-                newPageInput.metafields.push({
-                    namespace: "global",
-                    key: "description_tag",
-                    value: originalPage.seoDescription.toString().trim(),
-                    type: "multi_line_text_field",
-                });
-            }
+            const response = await admin.graphql(CREATE_PAGE_MUTATION, { variables: { page: pageInput } });
+            const result = await response.json();
+            const pageId = result.data.pageCreate.page.id
+            const extractedId = ShopifyPageId.extract(pageId);
 
-            const res = await admin.graphql(DUPLICATE_PAGE_MUTATION, { variables: { page: newPageInput } });
-            const result = await res.json();
-            const idPageNum = ShopifyPageId.extract(result.data.pageCreate.page.id)
-            return redirect(`/pages/${encodeURIComponent(idPageNum as string)}`);
+            return redirect(`/pages/${encodeURIComponent(extractedId as string)}`);
 
         } else {
-            console.log('=== UPDATE PAGE ACTION ===');
+            console.log('✅UPDATE PAGE ACTION ✅');
+            const pageInput = formatPageDataForUpdate(data);
+            console.log('pageInput', pageInput);
 
-
-            const pageData = formatPageDataForGraphQL(data);
-            console.log('Parsed page data:', pageData);
-
-            // GraphQL mutation to update page
-            const pageInput = {
-                title: pageData.title,
-                body: pageData.body,
-                handle: pageData.handle,
-                templateSuffix: pageData.templateSuffix,
-                isPublished: pageData.isPublished,
-                publishDate: pageData.publishedAt
-                // publishedAt: pageData.publishedAt
-            };
-
-            console.log('GraphQL input:', pageInput);
-
-            const updateResponse = await admin.graphql(updatePageMutation, {
+            const updateResponse = await admin.graphql(UPDATE_PAGE_MUTION, {
                 variables: {
                     id: id,
                     page: pageInput
                 }
             });
-            console.log('run')
             const updateResult = await updateResponse.json();
             console.log('Update result:', JSON.stringify(updateResult, null, 2));
 
@@ -203,29 +103,11 @@ export async function action({ params, request }: ActionFunctionArgs) {
             }
 
             // Update SEO metafields if provided
-            const metafieldsToUpdate = formatMetafieldsForUpdate(data, id);
-
+            const metafieldsToUpdate = buildSeoMetafields(data, id);
+            console.log('metafieldsToUpdate>> ', metafieldsToUpdate)
             if (metafieldsToUpdate.length > 0) {
                 console.log('Updating SEO metafields...');
-
-                const metafieldMutation = `
-                mutation metafieldsSet($metafields: [MetafieldsSetInput!]!) {
-                    metafieldsSet(metafields: $metafields) {
-                        metafields {
-                            id
-                            namespace
-                            key
-                            value
-                        }
-                        userErrors {
-                            field
-                            message
-                        }
-                    }
-                }
-            `;
-
-                const metafieldResponse = await admin.graphql(metafieldMutation, {
+                const metafieldResponse = await admin.graphql(SET_METAFIELDS_MUTATION, {
                     variables: {
                         metafields: metafieldsToUpdate
                     }
@@ -236,7 +118,6 @@ export async function action({ params, request }: ActionFunctionArgs) {
 
                 if (metafieldResult.data?.metafieldsSet?.userErrors?.length > 0) {
                     console.error('Metafield update errors:', metafieldResult.data.metafieldsSet.userErrors);
-                    // Log errors but don't fail the entire operation
                 }
             }
 
@@ -270,8 +151,6 @@ export default function EditPage() {
     const isSubmitting = fetcher.state === "submitting";
 
     const handleSubmit = useCallback((formData: PageFormValues) => {
-        console.log('formData>> ', formData)
-
         const submitData = new FormData();
 
         Object.entries(formData).forEach(([key, value]) => {
@@ -279,7 +158,6 @@ export default function EditPage() {
                 submitData.append(key, String(value));
             }
         });
-        console.log('submitData>> ', submitData)
         fetcher.submit(submitData, { method: "post" });
     }, [fetcher]);
 
@@ -293,17 +171,10 @@ export default function EditPage() {
 
     // Duplicate
     const handleDuplicate = useCallback((title: string) => {
-
         const baseHandle = generateHandle(title)
+        const newHandle = `${baseHandle}-${Date.now()}`
 
-        const newHandle = baseHandle === page.handle ? `${baseHandle}-${Date.now()}` : baseHandle
-
-        const pageDuplicate = {
-            ...page,
-            id: undefined,
-            title,
-            handle: newHandle
-        }
+        const pageDuplicate = { ...page, id: undefined, title, handle: newHandle }
         const fd = new FormData();
         fd.append("_action", "duplicate");
         fd.append("_pageJson", JSON.stringify(pageDuplicate));

@@ -12,7 +12,8 @@ import { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { connectDb } from "app/db.server";
 import { authenticate } from "app/shopify.server";
 import { useLoaderData } from "@remix-run/react";
-import { useNavigationSkeleton } from "app/lib/utils/useNavigationSkeleton";
+import { useNavigationSkeleton } from "app/hooks/useNavigationSkeleton";
+import { GET_PRODUCT_QUERY } from "app/graphql";
 
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -20,28 +21,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   await connectDb();
 
   //get list product
-  const response = await admin.graphql(`
-    {
-      products(first: 10) {
-        edges {
-          node {
-            id
-            title
-            handle
-            status
-            variants(first: 5) {
-              edges {
-                node {
-                  id
-                  price
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `);
+  const response = await admin.graphql(GET_PRODUCT_QUERY);
 
   const data = await response.json();
   const products = data.data.products.edges.map(({ node }: any) => ({

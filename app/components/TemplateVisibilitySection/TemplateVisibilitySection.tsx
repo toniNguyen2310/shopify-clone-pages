@@ -1,7 +1,5 @@
-// components/TemplateVisibilitySection/index.tsx
 import {
     BlockStack,
-    Button,
     Card,
     ChoiceList,
     Icon,
@@ -9,10 +7,10 @@ import {
     Link,
     Select,
     Text,
-    TextField
 } from "@shopify/polaris";
 import { CalendarTimeIcon, ViewIcon } from "@shopify/polaris-icons";
 import type { TemplateVisibilitySectionProps } from "./types";
+import { formatPublishDate } from "app/utils/helpers";
 
 export default function TemplateVisibilitySection({
     templateSuffix,
@@ -27,19 +25,8 @@ export default function TemplateVisibilitySection({
     const templateOptions = [
         { label: 'Default', value: '' },
         { label: 'Contact', value: 'contact' },
+        { label: 'About', value: 'about' },
     ];
-
-    // Format date for display
-    const formatPublishDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
 
     // Visibility choices
     const visibilityChoices = [

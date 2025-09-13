@@ -31,7 +31,7 @@ redirect_urls = ["https://shopify-clone-pages.vercel.app/auth/callback", "https:
 [pos]
 embedded = false
 
-# [app_proxy]
-# url = "https://shopify-clone-pages.vercel.app/proxy"
-# subpath = "preview"
-# prefix = "a"
+[app_proxy]
+url = "https://shopify-clone-pages.vercel.app/proxy"
+subpath = "preview"
+prefix = "a"

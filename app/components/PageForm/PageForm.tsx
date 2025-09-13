@@ -11,26 +11,18 @@ import {
     TextField,
     PageActions,
     Modal,
-    LegacyStack,
-    Tag,
-    KeyboardKey,
     Label,
     Box,
-
 } from "@shopify/polaris";
 import {
     DeleteIcon,
     EditIcon
 } from '@shopify/polaris-icons';
 import TemplateVisibilitySection from "../TemplateVisibilitySection/TemplateVisibilitySection";
-import { PageFormProps, PageFormValues } from "app/lib/shopify/types/pages";
-import { ShopifyPageId } from "app/lib/utils/useShopifyPageId ";
 import "./pageform.css";
-import { generateHandle } from "app/lib/shopify/graphql";
 import { EditorComponent } from "../RichText/RichText";
-import { cleanEditorHtml } from "app/lib/utils/cleanEditorHtml";
-
-
+import { cleanEditorHtml, generateHandle, ShopifyPageId } from "app/utils/helpers";
+import { PageFormValues, PageFormProps } from "app/types";
 
 const initialEmptyState: PageFormValues = {
     id: undefined,
@@ -43,6 +35,7 @@ const initialEmptyState: PageFormValues = {
     publishedAt: null,
     isPublished: false,
 };
+
 export default function PageForm({
     mode,
     defaultValues = {},
@@ -78,8 +71,6 @@ export default function PageForm({
 
             if (defaultValues.title) {
                 const autoHandle = generateHandle(defaultValues.title);
-                // nếu handle lưu trong DB khác với autoHandle => user từng sửa tay
-                console.log('defaultValues.handle !== autoHandle>>> ', defaultValues.handle !== autoHandle)
                 setIsHandleManuallySet(defaultValues.handle !== autoHandle);
             } else {
                 setIsHandleManuallySet(false);
@@ -87,6 +78,7 @@ export default function PageForm({
         }
     }, [defaultValues]);
 
+    //create handle title automative
     useEffect(() => {
         if (formState.title) {
             const autoHandle = generateHandle(formState.title);
@@ -107,7 +99,7 @@ export default function PageForm({
         }
     }, [formState.title, formState.seoTitle]);
 
-    // --- helper update field ---
+    // --- helper update field in page input ---
     const updateField = useCallback(
         <K extends keyof PageFormValues>(field: K) =>
             (value: PageFormValues[K]) => {
@@ -121,7 +113,7 @@ export default function PageForm({
     );
 
 
-    // --- handle submit ---
+    // --- handle submit SAVE ---
     const handleSubmit = useCallback(() => {
         const submitData: PageFormValues = {
             ...formState,
@@ -138,7 +130,7 @@ export default function PageForm({
     }, [formState, onSubmit]);
 
 
-
+    //Discard value
     const handleDiscard = useCallback(() => {
         if (mode === "create") {
             // reset rỗng

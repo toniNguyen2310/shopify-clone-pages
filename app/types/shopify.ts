@@ -35,6 +35,7 @@ export interface PageFormValues {
     publishedAt: string | null;
     isPublished: boolean;
 }
+
 export interface PageTableValue extends Record<string, unknown> {
     id: string,
     title: string,
@@ -44,10 +45,11 @@ export interface PageTableValue extends Record<string, unknown> {
     templateSuffix: string | null,
     updatedAt: string
 }
+
 export interface PageTableProps {
     listPages: PageTableValue[]
+    setToast: (content: string) => void
 }
-
 
 export type PageFormProps = {
     mode: "create" | "edit";
@@ -60,3 +62,28 @@ export type PageFormProps = {
     isDuplicating?: boolean;
     shopDomain?: string
 };
+
+export interface PageData {
+    title: string;
+    handle: string;
+    body: string;
+    templateSuffix?: string | null;
+    publishedAt?: string | null;
+    seoTitle?: string;
+    seoDescription?: string;
+}
+
+export interface PageInput {
+    title: string;
+    handle: string;
+    body: string;
+    templateSuffix: string | null;
+    isPublished: boolean;
+    publishDate: string | null;
+    metafields: Array<{
+        namespace: string;
+        key: string;
+        value: string;
+        type: string;
+    }>;
+}

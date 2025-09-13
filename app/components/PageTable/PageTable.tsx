@@ -12,15 +12,14 @@ import {
 } from '@shopify/polaris';
 import { DeleteIcon } from '@shopify/polaris-icons';
 import type { IndexFiltersProps, TabProps } from '@shopify/polaris';
-import { getTextFromHTML } from 'app/lib/utils/getTextFromHTML';
-import { formatTime } from 'app/lib/utils/useFormatTime';
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { PageTableProps, PageTableValue } from "app/lib/shopify/types/pages";
-import "./pagetable.css";
 import { useFetcher, useNavigate } from '@remix-run/react';
-import { ShopifyPageId } from 'app/lib/utils/useShopifyPageId ';
+import { formatTime, getTextFromHTML, ShopifyPageId } from 'app/utils/helpers';
+import { PageTableProps, PageTableValue } from 'app/types';
+import "./pagetable.css";
 
-export const PageTable = ({ listPages }: PageTableProps) => {
+
+export const PageTable = ({ listPages, setToast }: PageTableProps) => {
     const navigate = useNavigate();
     const fetcher = useFetcher();
     const sleep = (ms: number) =>
@@ -342,11 +341,11 @@ export const PageTable = ({ listPages }: PageTableProps) => {
     const promotedBulkActions = [
         {
             content: 'Set as visible',
-            onAction: () => handlePromotedBulkAction('setVisible'),
+            onAction: () => handlePromotedBulkAction('visible'),
         },
         {
             content: 'Set as hidden',
-            onAction: () => handlePromotedBulkAction('setHidden'),
+            onAction: () => handlePromotedBulkAction('hidden'),
         },
     ];
 
@@ -355,31 +354,48 @@ export const PageTable = ({ listPages }: PageTableProps) => {
             icon: DeleteIcon,
             destructive: true,
             content: 'Delete pages',
-            onAction: () => handleDeleteSelected(),
+            onAction: () => handlePromotedBulkAction('delete'),
         },
     ];
 
-    useEffect(() => {
-        console.log('selectedResources>> ', selectedResources)
-    }, [selectedResources])
-
-    const handleDeleteSelected = useCallback(() => {
-        if (selectedResources.length === 0) return;
-
-        const formData = new FormData();
-        formData.append('_action', 'delete')
-        selectedResources.forEach((id) => formData.append('ids[]', id));
-        console.log('formData>> ', formData)
-        fetcher.submit(formData, { method: 'post' })
-    }, [selectedResources])
-
-    const handlePromotedBulkAction = useCallback(async (action: string) => {
+    const handlePromotedBulkAction = useCallback((action: string) => {
         if (selectedResources.length === 0) return;
         const formData = new FormData();
         formData.append('_action', action)
         selectedResources.forEach(id => formData.append('ids[]', id));
         fetcher.submit(formData, { method: 'post' })
-    }, [selectedResources])
+        if (action === 'delete') {
+            setToast('Deleting page...')
+        } else (
+            setToast(`Setting page as ${action}...`)
+        )
+    }, [selectedResources, fetcher])
+
+    type ActionResponse = {
+        success: boolean;
+        action: string;
+        message: string;
+        results: any[];
+        errors?: string[];
+    };
+    useEffect(() => {
+        const data = fetcher.data as ActionResponse | undefined;
+
+        if (data) {
+            if (data.success) {
+                const actionType = data.action;
+                console.log("fetcher.data >>> ", data);
+
+                if (actionType === "delete") {
+                    setToast("Page deleted");
+                } else {
+                    setToast(`Page set as ${actionType}`);
+                }
+            } else {
+                console.log("Error");
+            }
+        }
+    }, [fetcher.data]);
 
     return (
         <Card padding="0">
