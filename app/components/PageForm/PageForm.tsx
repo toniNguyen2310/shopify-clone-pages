@@ -64,6 +64,24 @@ export default function PageForm({
     const [showDuplicateModal, setShowDuplicateModal] = useState(false);
     const [duplicateForm, setDuplicateForm] = useState<string>("");
 
+    // --- helper update field in page input ---
+    const updateField = useCallback(
+        <K extends keyof PageFormValues>(field: K) =>
+            (value: PageFormValues[K]) => {
+                setFormState(prev => ({ ...prev, [field]: value }));
+                if (field === 'handle') {
+                    setIsHandleManuallySet(true);
+                }
+            },
+        []
+    );
+
+    const openDuplicateModal = useCallback(() => {
+        const sourceTitle = formState?.title ?? defaultValues?.title ?? "";
+        setDuplicateForm(`copy of ${sourceTitle}`);
+        setShowDuplicateModal(true);
+    }, [formState?.title, defaultValues?.title]);
+
     // --- sync when defaultValues changes (edit mode) ---
     useEffect(() => {
         if (Object.keys(defaultValues).length > 0) {
@@ -91,26 +109,12 @@ export default function PageForm({
         }
     }, [formState.title, isHandleManuallySet]);
 
-
     // Auto-generate seoTitle from title if not set
     useEffect(() => {
         if (!formState.seoTitle && formState.title) {
             setFormState((prev) => ({ ...prev, seoTitle: prev.title }));
         }
     }, [formState.title, formState.seoTitle]);
-
-    // --- helper update field in page input ---
-    const updateField = useCallback(
-        <K extends keyof PageFormValues>(field: K) =>
-            (value: PageFormValues[K]) => {
-                setFormState(prev => ({ ...prev, [field]: value }));
-                // Track if handle is manually set
-                if (field === 'handle') {
-                    setIsHandleManuallySet(true);
-                }
-            },
-        []
-    );
 
 
     // --- handle submit SAVE ---
@@ -125,10 +129,21 @@ export default function PageForm({
             seoTitle: formState.seoTitle?.trim() || formState.title,
             seoDescription: formState.seoDescription?.trim() || "",
         };
+        // setFormState(prev => ({
+        //     ...prev,
+        //     title: formState.title.trim(),
+        //     body: cleanEditorHtml(formState.body),
+        //     handle:
+        //         formState.handle.trim() ||
+        //         formState.title.toLowerCase().replace(/\s+/g, "-"),
+        //     seoTitle: formState.seoTitle?.trim() || formState.title,
+        //     seoDescription: formState.seoDescription?.trim() || "",
+        // }));
+
         console.log('submitData>> ', submitData)
+        setHasChanges(false)
         onSubmit(submitData)
     }, [formState, onSubmit]);
-
 
     //Discard value
     const handleDiscard = useCallback(() => {
@@ -159,7 +174,6 @@ export default function PageForm({
         }
         setHasChanges(false)
     }, [mode, defaultValues])
-
 
     const handleView = () => {
         if (!defaultValues?.id) return;
@@ -213,18 +227,10 @@ export default function PageForm({
                 });
 
         setHasChanges(currentData !== baseData);
+        console.log('pageform>> ', formState)
+
     }, [formState, defaultValues, mode]);
 
-
-    const openDuplicateModal = useCallback(() => {
-        const sourceTitle = formState?.title ?? defaultValues?.title ?? "";
-        setDuplicateForm(`copy of ${sourceTitle}`);
-        setShowDuplicateModal(true);
-    }, [formState?.title, defaultValues?.title]);
-
-    useEffect(() => {
-        console.log('pageform>> ', formState)
-    }, [formState, defaultValues])
     return (
         <>
             <Page
@@ -239,7 +245,6 @@ export default function PageForm({
 
                 <BlockStack gap="500">
                     <Layout>
-                        {/* LEFT */}
                         <Layout.Section>
                             <BlockStack
                                 gap="500"

@@ -24,9 +24,9 @@ export default function App() {
         <Link to="/pages" rel="home">
           Clone Pages
         </Link>
+        <Link to="/pages/new">Add Pages</Link>
         <Link to="/pages/products">Products GA</Link>
         <Link to="/pages/theme">Theme Mongo</Link>
-        <Link to="/pages/new">Add Pages</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>

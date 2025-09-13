@@ -3,7 +3,7 @@ import { authenticate } from "app/shopify.server";
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import PageForm from "app/components/PageForm/PageForm";
 import { useCallback } from "react";
-import { Frame, } from "@shopify/polaris";
+import { Frame } from "@shopify/polaris";
 import { CREATE_PAGE_MUTATION, DELETE_PAGE_MUTATION, GET_PAGE_QUERY, SET_METAFIELDS_MUTATION, UPDATE_PAGE_MUTION } from "app/graphql";
 import { useNavigationSkeleton } from "app/hooks/useNavigationSkeleton";
 import { generateHandle, ShopifyPageId } from "app/utils/helpers";
@@ -197,6 +197,7 @@ export default function EditPage() {
                     shopDomain={session.shop}
                 />
             </Frame>
+
         </>
     );
 }
